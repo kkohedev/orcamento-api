@@ -43,7 +43,7 @@ O enunciado pedia pra evoluir a API com IA, e o que eu fiz foi:
 - A IA conseguindo executar ações de verdade no sistema, não só responder texto. Ela realmente cria e consulta as transações usando Tool Calling
 - Geração de voz na resposta, o texto virando fala de novo
 - Um log salvando cada interação: o que foi pedido, o que foi respondido, quando
-- Uma página simples no navegador pra eu conseguir testar tudo isso sem precisar ficar usando o Postman toda hora
+- Uma página simples no navegador pra eu conseguir testar tudo isso sem precisar ficar usando o Postman toda hora, feito com ajuda de IA.
 
 ## Como testar:
 
