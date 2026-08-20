@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Orçamento por Voz</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 50px auto; text-align: center; }
+        button { padding: 12px 24px; font-size: 16px; margin: 10px; cursor: pointer; }
+        #status { margin-top: 20px; color: #555; }
+        #transcricao, #resposta { margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+<h1>🎙️ Orçamento por Voz</h1>
+<button id="gravar">Gravar comando</button>
+<button id="parar" disabled>Parar</button>
+<p id="status">Clique em "Gravar comando" e fale</p>
+<div id="transcricao"></div>
+<div id="resposta"></div>
+<audio id="player" controls autoplay style="margin-top: 20px; width: 100%;"></audio>
+
+<script>
+    let mediaRecorder;
+    let chunks = [];
+
+    document.getElementById('gravar').onclick = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        chunks = [];
+
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = enviarAudio;
+
+        mediaRecorder.start();
+        document.getElementById('gravar').disabled = true;
+        document.getElementById('parar').disabled = false;
+        document.getElementById('status').textContent = '🔴 Gravando... fale seu comando';
+    };
+
+    document.getElementById('parar').onclick = () => {
+        mediaRecorder.stop();
+        document.getElementById('gravar').disabled = false;
+        document.getElementById('parar').disabled = true;
+        document.getElementById('status').textContent = '⏳ Processando...';
+    };
+
+    async function enviarAudio() {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', blob, 'comando.webm');
+
+        const response = await fetch('/audio/comando', {
+            method: 'POST',
+            body: formData
+        });
+
+        const textoTranscrito = response.headers.get('X-Texto-Transcrito');
+        const respostaTexto = response.headers.get('X-Resposta-Texto');
+
+        document.getElementById('transcricao').textContent = '🗣️ Você disse: ' + textoTranscrito;
+        document.getElementById('resposta').textContent = '🤖 Resposta: ' + respostaTexto;
+        document.getElementById('status').textContent = '✅ Pronto!';
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        document.getElementById('player').src = audioUrl;
+    }
+</script>
+</body>
+</html>

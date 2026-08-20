@@ -1,5 +1,7 @@
 package com.github.kkohedev.orcamento_api.controller;
 
+import com.github.kkohedev.orcamento_api.domain.LogInteracao;
+import com.github.kkohedev.orcamento_api.repository.LogInteracaoRepository;
 import org.springframework.ai.audio.tts.TextToSpeechPrompt;
 import org.springframework.ai.audio.tts.TextToSpeechResponse;
 import org.springframework.ai.chat.client.ChatClient;
@@ -25,13 +27,16 @@ public class AudioController {
     private final OpenAiAudioTranscriptionModel transcriptionModel;
     private final OpenAiAudioSpeechModel speechModel;
     private final ChatClient chatClient;
+    private final LogInteracaoRepository logInteracaoRepository;
 
     public AudioController(OpenAiAudioTranscriptionModel transcriptionModel,
                            OpenAiAudioSpeechModel speechModel,
-                           ChatClient chatClient) {
+                           ChatClient chatClient,
+                           LogInteracaoRepository logInteracaoRepository) {
         this.transcriptionModel = transcriptionModel;
         this.speechModel = speechModel;
         this.chatClient = chatClient;
+        this.logInteracaoRepository = logInteracaoRepository;
     }
 
     @PostMapping("/comando")
@@ -53,6 +58,9 @@ public class AudioController {
         String textoTranscrito = transcricao.getResult().getOutput();
 
         String respostaTexto = chatClient.prompt(textoTranscrito).call().content();
+
+        LogInteracao log = new LogInteracao(textoTranscrito, respostaTexto, "AUDIO");
+        logInteracaoRepository.save(log);
 
         OpenAiAudioSpeechOptions speechOptions = OpenAiAudioSpeechOptions.builder()
                 .model("tts-1")
